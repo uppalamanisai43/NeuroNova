@@ -19,6 +19,8 @@ env/
 *.keras
 *.h5
 *.pb
+huggingface_space/
+MinGit/
 
 # Uploads
 uploads/*
