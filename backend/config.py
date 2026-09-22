@@ -20,17 +20,41 @@ logger = logging.getLogger(__name__)
 # Project root: one level above backend/
 _PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
-# Config directory (config/ at project root)
-CONFIG_DIR = os.environ.get(
-    "NEURONOVA_CONFIG_DIR",
-    os.path.join(_PROJECT_ROOT, "config"),
-)
+# Config directory — check explicit env, internal backend/config, project root, and cwd
+def _resolve_config_dir() -> str:
+    env_dir = os.environ.get("NEURONOVA_CONFIG_DIR")
+    if env_dir and os.path.isdir(env_dir):
+        return env_dir
+    candidates = [
+        os.path.join(os.path.dirname(__file__), "config"),
+        os.path.join(_PROJECT_ROOT, "config"),
+        os.path.join(os.getcwd(), "config"),
+        os.path.join(os.getcwd(), "backend", "config"),
+    ]
+    for c in candidates:
+        if os.path.isfile(os.path.join(c, "ensemble_config.json")):
+            return c
+    return os.path.join(os.path.dirname(__file__), "config")
 
-# Models directory — defaults to project root where the .keras files live
-MODELS_DIR = os.environ.get(
-    "NEURONOVA_MODELS_DIR",
-    _PROJECT_ROOT,
-)
+CONFIG_DIR = _resolve_config_dir()
+
+# Models directory — defaults to project root or backend/models
+def _resolve_models_dir() -> str:
+    env_dir = os.environ.get("NEURONOVA_MODELS_DIR")
+    if env_dir:
+        return env_dir
+    candidates = [
+        os.path.join(os.path.dirname(__file__), "models"),
+        os.path.dirname(__file__),
+        _PROJECT_ROOT,
+        os.getcwd(),
+    ]
+    for c in candidates:
+        if os.path.isdir(c):
+            return c
+    return _PROJECT_ROOT
+
+MODELS_DIR = _resolve_models_dir()
 
 # Uploads directory
 UPLOADS_DIR = os.environ.get(
@@ -55,31 +79,41 @@ class EnsembleConfig:
 # Loader & validator
 # ---------------------------------------------------------------------------
 
+DEFAULT_CLASS_NAMES = ["glioma", "meningioma", "notumor", "pituitary"]
+DEFAULT_WEIGHTS = [0.55, 0.15, 0.30]
+DEFAULT_IMAGE_SIZE = [224, 224]
+DEFAULT_MODELS = {
+    "mobilenet": "mobilenet_finetuned.keras",
+    "resnet50": "resnet50_finetuned.keras",
+    "vgg16": "vgg16_finetuned.keras",
+}
+
+
 def load_config() -> EnsembleConfig:
-    """Load and validate ensemble configuration from JSON files."""
+    """Load and validate ensemble configuration from JSON files, with resilient defaults."""
     ensemble_path = os.path.join(CONFIG_DIR, "ensemble_config.json")
     class_names_path = os.path.join(CONFIG_DIR, "class_names.json")
 
-    if not os.path.isfile(ensemble_path):
-        raise FileNotFoundError(
-            f"ensemble_config.json not found at: {ensemble_path}"
-        )
-    if not os.path.isfile(class_names_path):
-        raise FileNotFoundError(
-            f"class_names.json not found at: {class_names_path}"
+    raw = {}
+    if os.path.isfile(ensemble_path):
+        with open(ensemble_path, "r") as f:
+            raw = json.load(f)
+    else:
+        logger.warning(
+            "ensemble_config.json not found at %s. Using production calibrated defaults.",
+            ensemble_path,
         )
 
-    with open(ensemble_path, "r") as f:
-        raw = json.load(f)
+    class_names: List[str] = raw.get("class_names")
+    if not class_names and os.path.isfile(class_names_path):
+        with open(class_names_path, "r") as f:
+            class_names = json.load(f)
+    if not class_names:
+        class_names = DEFAULT_CLASS_NAMES
 
-    class_names: List[str] = raw["class_names"]
-    weights: List[float] = raw["weights"]
-    image_size: List[int] = raw["image_size"]
-    model_filenames: Dict[str, str] = raw.get("models", {
-        "mobilenet": "mobilenet_finetuned.keras",
-        "resnet50": "resnet50_finetuned.keras",
-        "vgg16": "vgg16_finetuned.keras",
-    })
+    weights: List[float] = raw.get("weights", DEFAULT_WEIGHTS)
+    image_size: List[int] = raw.get("image_size", DEFAULT_IMAGE_SIZE)
+    model_filenames: Dict[str, str] = raw.get("models", DEFAULT_MODELS)
 
     # Validate weight count matches model count
     model_count = len(model_filenames)

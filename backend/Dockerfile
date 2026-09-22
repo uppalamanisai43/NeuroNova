@@ -11,12 +11,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# App source
+# Copy backend source (including backend/config)
 COPY . .
 
 # Upload directory
 RUN mkdir -p /app/uploads
 
+ENV PORT=5000
+ENV CORS_ORIGINS=*
+
 EXPOSE 5000
 
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "1", "--threads", "2", "--timeout", "120", "app:app"]
+CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:${PORT:-5000} --workers 1 --threads 2 --timeout 180 app:app"]
