@@ -1,0 +1,118 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---- Base ---- */
+:root {
+  --bg-primary: #0a0f1e;
+  --bg-secondary: #0d1529;
+  --accent-cyan: #00d4ff;
+  --accent-cyan-dim: #0891b2;
+  --text-primary: #f1f5f9;
+  --text-muted: #94a3b8;
+  --border-glass: rgba(255, 255, 255, 0.08);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'Inter', system-ui, sans-serif;
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--accent-cyan-dim);
+  border-radius: 3px;
+}
+
+/* ---- Utility classes ---- */
+@layer components {
+  .glass-card {
+    @apply bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+
+  .glass-card-hover {
+    @apply glass-card transition-all duration-300 hover:bg-white/8 hover:border-cyan-500/30;
+  }
+
+  .btn-primary {
+    @apply bg-cyan-500 hover:bg-cyan-400 text-navy-900 font-semibold px-6 py-3 rounded-xl
+           transition-all duration-200 shadow-glow-sm hover:shadow-glow
+           disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none;
+  }
+
+  .btn-secondary {
+    @apply border border-white/20 hover:border-cyan-500/50 text-slate-300 hover:text-cyan-400
+           font-medium px-4 py-2 rounded-lg transition-all duration-200 text-sm;
+  }
+
+  .label-cyan {
+    @apply text-xs font-mono uppercase tracking-widest text-cyan-400;
+  }
+
+  .badge {
+    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold;
+  }
+
+  .section-title {
+    @apply text-lg font-semibold text-slate-200 mb-4;
+  }
+}
+
+/* ---- Progress bar animation ---- */
+@keyframes progress-fill {
+  from { width: 0%; }
+  to { width: var(--target-width); }
+}
+
+.progress-bar {
+  animation: progress-fill 0.8s ease-out forwards;
+}
+
+/* ---- Glow pulse ---- */
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 12px rgba(0, 212, 255, 0.3); }
+  50%       { box-shadow: 0 0 24px rgba(0, 212, 255, 0.6); }
+}
+
+.glow-pulse {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+/* ---- Loading dots ---- */
+@keyframes dot-bounce {
+  0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+  40%           { transform: translateY(-6px); opacity: 1; }
+}
+
+.dot-1 { animation: dot-bounce 1.2s ease-in-out infinite; }
+.dot-2 { animation: dot-bounce 1.2s ease-in-out 0.2s infinite; }
+.dot-3 { animation: dot-bounce 1.2s ease-in-out 0.4s infinite; }
+
+/* ---- Drag-over highlight ---- */
+.drop-active {
+  @apply border-cyan-400 bg-cyan-500/10;
+}
+
+/* ---- Recharts overrides ---- */
+.recharts-text { fill: #94a3b8 !important; font-size: 12px !important; }
+.recharts-cartesian-axis-line { stroke: rgba(255,255,255,0.1) !important; }
+.recharts-cartesian-grid-horizontal line { stroke: rgba(255,255,255,0.05) !important; }

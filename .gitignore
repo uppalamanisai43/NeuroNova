@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+*.spec
+.venv/
+venv/
+env/
+.env
+.env.local
+
+# Models (large — should not be in git)
+*.keras
+*.h5
+*.pb
+
+# Uploads
+uploads/*
+!uploads/.gitkeep
+
+# Next.js
+frontend/.next/
+frontend/node_modules/
+frontend/.env*.local
+frontend/out/
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo

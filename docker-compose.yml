@@ -1,0 +1,49 @@
+version: "3.9"
+
+services:
+  # ────────────────────────────────────────────────────
+  # Flask / TensorFlow backend
+  # ────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_DEBUG=false
+      - PORT=5000
+      - CORS_ORIGINS=http://localhost:3000
+      - NEURONOVA_MODELS_DIR=/app/models
+      - NEURONOVA_CONFIG_DIR=/app/config
+      - NEURONOVA_UPLOADS_DIR=/app/uploads
+    volumes:
+      # Mount the .keras model files (do not bake them into the image)
+      - ./mobilenet_finetuned.keras:/app/models/mobilenet_finetuned.keras:ro
+      - ./resnet50_finetuned.keras:/app/models/resnet50_finetuned.keras:ro
+      - ./vgg16_finetuned.keras:/app/models/vgg16_finetuned.keras:ro
+      - ./config:/app/config:ro
+      - ./uploads:/app/uploads
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s   # TF model loading takes time
+
+  # ────────────────────────────────────────────────────
+  # Next.js frontend
+  # ────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:5000
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
