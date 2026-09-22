@@ -115,14 +115,26 @@ def load_config() -> EnsembleConfig:
     )
 
 
+_HF_CDN_BASE = "https://huggingface.co/spaces/mani4117/neuronova-backend/resolve/main"
+
+
 def get_model_path(filename: str) -> str:
-    """Return absolute path for a model filename inside MODELS_DIR."""
+    """Return absolute path for a model filename inside MODELS_DIR, downloading if missing."""
+    os.makedirs(MODELS_DIR, exist_ok=True)
     path = os.path.join(MODELS_DIR, filename)
     if not os.path.isfile(path):
-        raise FileNotFoundError(
-            f"Model file not found: {path}\n"
-            f"Set NEURONOVA_MODELS_DIR env variable if models are elsewhere."
-        )
+        url = f"{_HF_CDN_BASE}/{filename}"
+        logger.info("Model %s not found at %s. Downloading from CDN: %s ...", filename, path, url)
+        import urllib.request
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+            with urllib.request.urlopen(req) as resp, open(path, "wb") as out_f:
+                out_f.write(resp.read())
+            logger.info("Downloaded %s successfully (%d bytes).", filename, os.path.getsize(path))
+        except Exception as e:
+            raise FileNotFoundError(
+                f"Model file not found at {path} and failed to download from {url}: {e}"
+            )
     return path
 
 
