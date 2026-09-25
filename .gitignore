@@ -22,6 +22,17 @@ env/
 huggingface_space/
 MinGit/
 
+# Personal documents, papers, and PDFs (local only)
+*.pdf
+*.tex
+*.html
+*resume*
+*Resume*
+*research_paper*
+*Research_Paper*
+NEURONOVA_RESEARCH_PAPER.md
+RESUME_MANISAI_UPPALA.md
+
 # Uploads
 uploads/*
 !uploads/.gitkeep
